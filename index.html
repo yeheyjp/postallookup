@@ -12,7 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
   <script>
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRq5eNBpuJczl_G2TAF4Kz7jUG9LiSBOXZFGJqmp7Atdi92wEOm8S69FDifpEHqvI2zEVWKk88h5AVO/pub?output=csv';
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRAW6ayoR8IEwd4wwGDfzfGTZeB2wXiHKGNM8Aag3E74eHhemt7BmoyTNPEZtCtMm_tmo6QjmDReZ_J/pub?output=csv';
 
     let postalData = [];
     let cityTownData = {};
@@ -56,7 +56,7 @@
 
     function loadPrefectures() {
       const prefectureSelect = document.getElementById('prefecture_select');
-      prefectureSelect.innerHTML = '<option value="">Select Province</option>';
+      prefectureSelect.innerHTML = '<option value="">Select Prefecture</option>';
 
       Object.keys(cityTownData).forEach(prefecture => {
         const option = document.createElement('option');
@@ -69,7 +69,7 @@
     function loadCities() {
       const prefecture = document.getElementById('prefecture_select').value;
       const citySelect = document.getElementById('city_select');
-      citySelect.innerHTML = '<option value="">Select City/Town</option>';
+      citySelect.innerHTML = '<option value="">Select City</option>';
 
       if (prefecture && cityTownData[prefecture]) {
         Object.keys(cityTownData[prefecture]).forEach(city => {
@@ -85,7 +85,7 @@
       const prefecture = document.getElementById('prefecture_select').value;
       const city = document.getElementById('city_select').value;
       const townSelect = document.getElementById('town_select');
-      townSelect.innerHTML = '<option value="">Select Brgy (MM Only)</option>';
+      townSelect.innerHTML = '<option value="">Select Town</option>';
 
       if (prefecture && city && cityTownData[prefecture] && cityTownData[prefecture][city]) {
         cityTownData[prefecture][city].forEach(town => {
@@ -103,72 +103,62 @@
         alert("Please enter a postal code.");
         return;
       }
-
-      // Clear manual search fields
-      document.getElementById('prefecture_select').value = '';
-      document.getElementById('city_select').innerHTML = '<option value="">Select City/Town</option>';
-      document.getElementById('town_select').innerHTML = '<option value="">Select Brgy (MM Only)</option>';
+	  
+	  // Clear manual search fields
+	document.getElementById('prefecture_select').value = '';
+	document.getElementById('city_select').innerHTML = '<option value="">Select City</option>';
+	document.getElementById('town_select').innerHTML = '<option value="">Select Town</option>';
 
       const entries = postalData.filter(row => row.postal_code == postalCode);
 
-      const resultsContainer = document.getElementById("address_result");
-      resultsContainer.innerHTML = '';
-
       if (entries.length > 0) {
+        const resultsContainer = document.getElementById("address_result");
+        resultsContainer.innerHTML = '';
+
         entries.forEach(entry => {
+          const englishAddress = `${entry.postal_code} ${entry.prefecture} ${entry.city} ${entry.town}`;
+
           const resultGroup = document.createElement('div');
           resultGroup.classList.add('result-group', 'mb-4');
 
           resultGroup.innerHTML = `
             <table class="table table-bordered" style="background-color: white;">
-              <tbody>
-                <tr>
-                  <td>Postal Code</td>
-                  <td>${entry.postal_code}</td>
-                </tr>
-                <tr>
-                  <td>English</td>
-                  <td>${entry.address}</td>
-                </tr>
-				<tr>
-                  <td>Island</td>
-                  <td>${entry.island_group}</td>
-                </tr>
-                <tr>
-                  <td>Lead Time</td>
-                  <td>${entry.lead_time || 'No Data Yet'}</td>
-                </tr>
-              </tbody>
-            </table>
-            <button class="btn btn-success" onclick="copyBoth(this)">Copy Address</button>
+  <tbody>
+    <tr>
+      <td>Address</td>
+      <td>${entry.address} ${entry.postal}</td>
+    </tr>
+    <tr>
+      <td>ETA</td>
+      <td>${entry.island_group || 'No Data Yet'} ${entry.lead_time || 'No Data Yet'}</td>
+    </tr>
+  </tbody>
+</table>
+
+<button class="btn btn-success" onclick="copyBoth(this)">Copy</button>
           `;
 
           resultsContainer.appendChild(resultGroup);
         });
       } else {
-        resultsContainer.innerHTML = "<p>No data found for this postal code.</p>";
+        document.getElementById("address_result").innerHTML = "<p>No data found for this postal code.</p>";
       }
     }
 
     function searchByLocation() {
-      const prefecture = document.getElementById('prefecture_select').value.trim();
-      const city = document.getElementById('city_select').value.trim();
-      const town = document.getElementById('town_select').value.trim();
+      const prefecture = document.getElementById('prefecture_select').value;
+      const city = document.getElementById('city_select').value;
+      const town = document.getElementById('town_select').value;
 
-      if (!prefecture || !city) {
-        alert("Please select a province and city.");
+      if (!prefecture || !city || !town) {
+        alert("Please select a prefecture, city, and town.");
         return;
       }
-
-      // Allow blank town for non-Metro Manila provinces
-      const allowBlankTown = !["metro manila", "ncr"].includes(prefecture.toLowerCase());
+	  
+	  document.getElementById('postal_code_input').value = '';
 
       const entries = postalData.filter(row => {
-        if (allowBlankTown) {
-          return row.prefecture === prefecture && row.city === city;
-        } else {
-          return row.prefecture === prefecture && row.city === city && row.town === town;
-        }
+        return row.prefecture === prefecture && row.city === city && row.town === town;
       });
 
       const resultsContainer = document.getElementById("address_result");
@@ -176,33 +166,26 @@
 
       if (entries.length > 0) {
         entries.forEach(entry => {
+          const englishAddress = `${entry.postal_code} ${entry.prefecture} ${entry.city} ${entry.town}`;
+          
           const resultGroup = document.createElement('div');
           resultGroup.classList.add('result-group', 'mb-4');
-
           resultGroup.innerHTML = `
             <table class="table table-bordered" style="background-color: white;">
-              <tbody>
-                <tr>
-                  <td>Postal Code</td>
-                  <td>${entry.postal_code}</td>
-                </tr>
-                <tr>
-                  <td>Address</td>
-                  <td>${entry.address}</td>
-                </tr>
-				<tr>
-                  <td>Island</td>
-                  <td>${entry.island_group}</td>
-                </tr>
-                <tr>
-                  <td>Lead Time</td>
-                  <td>${entry.lead_time || 'No Data Yet'}</td>
-                </tr>
-              </tbody>
-            </table>
-            <button class="btn btn-success" onclick="copyBoth(this)">Copy Address</button>
-          `;
+  <tbody>
+    <tr>
+      <td>Address</td>
+      <td>${entry.address} ${entry.postal}</td>
+    </tr>
+    <tr>
+      <td>ETA</td>
+      <td>${entry.island_group || 'No Data Yet'} ${entry.lead_time || 'No Data Yet'}</td>
+    </tr>
+  </tbody>
+</table>
 
+<button class="btn btn-success" onclick="copyBoth(this)">Copy</button>
+          `;
           resultsContainer.appendChild(resultGroup);
         });
       } else {
@@ -210,38 +193,38 @@
       }
     }
 
-    function copyBoth(button) {
-      const resultGroup = button.closest('.result-group');
-      const table = resultGroup.querySelector('table');
+function copyBoth(button) {
+    const resultGroup = button.closest('.result-group');
+    const table = resultGroup.querySelector('table');
 
-      const postal = table.rows[0].cells[1].textContent;
-      const englishAddress = table.rows[1].cells[1].textContent;
-      const japaneseAddress = table.rows[2].cells[1].textContent;
-      const textToCopy = `${postal}\n, ${englishAddress}`;
+    const englishAddress = table.rows[0].cells[1].textContent;  
+    const textToCopy = `${englishAddress}`;
 
-      const tempTextArea = document.createElement('textarea');
-      tempTextArea.value = textToCopy;
-      document.body.appendChild(tempTextArea);
-      tempTextArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(tempTextArea);
+    const tempTextArea = document.createElement('textarea');
+    tempTextArea.value = textToCopy;
+    document.body.appendChild(tempTextArea);
+    tempTextArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempTextArea);
 
-      let copiedMessage = document.createElement('span');
-      copiedMessage.textContent = 'Copied.';
-      copiedMessage.style.marginLeft = '10px';
-      copiedMessage.style.color = 'green';
-      copiedMessage.style.fontWeight = 'bold';
-      copiedMessage.style.transition = 'opacity 0.5s ease';
-      button.parentElement.appendChild(copiedMessage);
+    // Show "Copied." message beside the button
+    let copiedMessage = document.createElement('span');
+    copiedMessage.textContent = 'Copied.';
+    copiedMessage.style.marginLeft = '10px';
+    copiedMessage.style.color = 'green';
+    copiedMessage.style.fontWeight = 'bold';
+    copiedMessage.style.transition = 'opacity 0.5s ease';
+    button.parentElement.appendChild(copiedMessage);
 
-      setTimeout(() => {
-        copiedMessage.style.opacity = '0';
-      }, 2000);
+    // Fade out and remove the message after 3 seconds
+    setTimeout(() => {
+      copiedMessage.style.opacity = '0';
+    }, 2000); // Wait 2 seconds, then fade out
 
-      setTimeout(() => {
-        copiedMessage.remove();
-      }, 3000);
-    }
+    setTimeout(() => {
+      copiedMessage.remove();
+    }, 3000); // Remove from DOM after 3 seconds
+  }
 
     window.onload = loadCSVData;
   </script>
@@ -249,37 +232,49 @@
 
 <body style="background-color: #f5f6f7;">
   <div class="container mt-1">
-    <h3 class="mt-4">Address Search - PHL</h3>
+    <!-- Postal code input group with search button on the right -->
+	<h3 class="mt-4">Address Search</h3>
     <div class="mt-1 mb-4">
       <div class="input-group">
         <input type="text" id="postal_code_input" class="form-control" placeholder="Enter postal code">
-        <button class="btn btn-primary" onclick="searchByPostalCode()">Search by Postal</button>
+        <button class="btn btn-primary" onclick="searchByPostalCode()">Search by Postal Code</button>
       </div>
     </div>
 
-    <div class="mb-1">
-      <select id="prefecture_select" class="form-select" onchange="loadCities()">
-        <option value="">Select Province</option>
-      </select>
-    </div>
-    <div class="mb-1">
-      <select id="city_select" class="form-select" onchange="loadTowns()">
-        <option value="">Select City/Town</option>
-      </select>
-    </div>
-    <div class="mb-1">
-      <select id="town_select" class="form-select">
-        <option value="">Select Brgy (MM Only)</option>
-      </select>
-    </div>
-    <div class="mb-4">
-      <button class="btn btn-primary w-60" onclick="searchByLocation()">Search by Location</button>
-    </div>
+<!-- Prefecture and City selectors in one row -->
+<div class="mb-1">
+  <select id="prefecture_select" class="form-select" onchange="loadCities()">
+    <option value="">Select Province</option>
+  </select>
+</div>
+<div class="mb-1">
+  <select id="city_select" class="form-select" onchange="loadTowns()">
+    <option value="">Select City/Municipality</option>
+  </select>
+</div>
 
-    <h3>Address Result</h3>
+<!-- Town and Search by Location in another row -->
+<div class="mb-1">
+  <select id="town_select" class="form-select">
+    <option value="">Select Barangay</option>
+  </select>
+</div>
+<div class="mb-4">
+  <button class="btn btn-primary w-60" onclick="searchByLocation()">Search by Location</button>
+</div>
+
+
+    <!-- Result display -->
+	<h3>Address Result</h3>
     <div id="address_result" class="mt-1"></div>
+
+    <!-- Copy Address Button -->
+    <div id="copy_address_btn" class="text-center" style="display: none;">
+      <button class="btn btn-success" onclick="copyAddress()">Copy</button>
+    </div>
   </div>
 
+  <!-- Load Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script>
   	document.getElementById('postal_code_input').addEventListener('keypress', function(event) {
@@ -289,4 +284,5 @@
 });
 </script>
 </body>
+
 </html>
