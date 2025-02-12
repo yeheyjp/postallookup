@@ -56,7 +56,7 @@
 
     function loadPrefectures() {
       const prefectureSelect = document.getElementById('prefecture_select');
-      prefectureSelect.innerHTML = '<option value="">Select Prefecture</option>';
+      prefectureSelect.innerHTML = '<option value="">Select Province</option>';
 
       Object.keys(cityTownData).forEach(prefecture => {
         const option = document.createElement('option');
@@ -69,7 +69,7 @@
     function loadCities() {
       const prefecture = document.getElementById('prefecture_select').value;
       const citySelect = document.getElementById('city_select');
-      citySelect.innerHTML = '<option value="">Select City</option>';
+      citySelect.innerHTML = '<option value="">Select City/Municipality</option>';
 
       if (prefecture && cityTownData[prefecture]) {
         Object.keys(cityTownData[prefecture]).forEach(city => {
@@ -85,7 +85,7 @@
       const prefecture = document.getElementById('prefecture_select').value;
       const city = document.getElementById('city_select').value;
       const townSelect = document.getElementById('town_select');
-      townSelect.innerHTML = '<option value="">Select Town</option>';
+      townSelect.innerHTML = '<option value="">Select Barangay</option>';
 
       if (prefecture && city && cityTownData[prefecture] && cityTownData[prefecture][city]) {
         cityTownData[prefecture][city].forEach(town => {
@@ -106,8 +106,8 @@
 	  
 	  // Clear manual search fields
 	document.getElementById('prefecture_select').value = '';
-	document.getElementById('city_select').innerHTML = '<option value="">Select City</option>';
-	document.getElementById('town_select').innerHTML = '<option value="">Select Town</option>';
+	document.getElementById('city_select').innerHTML = '<option value="">Select City/Municipality</option>';
+	document.getElementById('town_select').innerHTML = '<option value="">Select Barangay</option>';
 
       const entries = postalData.filter(row => row.postal_code == postalCode);
 
@@ -151,7 +151,7 @@
       const town = document.getElementById('town_select').value;
 
       if (!prefecture || !city || !town) {
-        alert("Please select a prefecture, city, and town.");
+        alert("Please select a province, city/municipality, and barangay.");
         return;
       }
 	  
